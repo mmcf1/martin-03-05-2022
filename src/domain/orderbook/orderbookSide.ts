@@ -1,4 +1,4 @@
-import { action, computed, makeObservable, observable, ObservableMap, runInAction } from "mobx";
+import { computed, makeObservable, observable, ObservableMap, runInAction } from "mobx";
 import { Price, PriceLevel } from "../priceLevel/priceLevel";
 import { PriceLevelProvider } from "../priceLevel/priceLevelProvider";
 import { OrderbookEventHandler } from "./orderbookEventHandler";
@@ -8,6 +8,11 @@ export interface OrderbookSide {
 	readonly side: Side;
 	readonly priceLevels: PriceLevel[];
 }
+
+export const orderbookSort: { [Key in Side]: (a: PriceLevel, b: PriceLevel) => number } = {
+	buy: (a: PriceLevel, b: PriceLevel) => b.price - a.price,
+	sell: (a: PriceLevel, b: PriceLevel) => a.price - b.price,
+};
 
 export class ObservableOrderbookSide implements OrderbookSide {
 	private readonly eventHandler = new OrderbookEventHandler(this.setPriceLevel.bind(this), this.deletePriceLevel.bind(this), this.clearLevels.bind(this));
@@ -21,13 +26,13 @@ export class ObservableOrderbookSide implements OrderbookSide {
 
 	@computed
 	get priceLevels() {
-		return Array.from(this.observablePriceLevels.values()).sort(this.sorts[this.side]);
+		return Array.from(this.observablePriceLevels.values()).sort(orderbookSort[this.side]);
 	}
 
-	private sorts: { [Key in Side]: (a: PriceLevel, b: PriceLevel) => number } = {
-		buy: (a: PriceLevel, b: PriceLevel) => b.price - a.price,
-		sell: (a: PriceLevel, b: PriceLevel) => a.price - b.price,
-	};
+	@computed
+	get rawPriceLevels() {
+		return this.observablePriceLevels;
+	}
 
 	private setPriceLevel(priceLevel: PriceLevel) {
 		runInAction(() => this.observablePriceLevels.set(priceLevel.price, priceLevel));
@@ -37,7 +42,6 @@ export class ObservableOrderbookSide implements OrderbookSide {
 		runInAction(() => this.observablePriceLevels.delete(priceLevel.price));
 	}
 
-	@action.bound
 	private clearLevels() {
 		runInAction(() => this.observablePriceLevels.clear());
 	}

@@ -3,15 +3,18 @@ import React, { useMemo } from "react";
 import { SafeAreaView, ScrollView, StatusBar, Text, View } from "react-native";
 import { ObservableOrderbook } from "../domain/orderbook/orderbook";
 import { OrderbookSide } from "../domain/orderbook/orderbookSide";
+import { ObservableOrderbookSideVisualizer } from "../domain/orderbook/orderbookSideVisualizer";
 
 export const HomeScreen = observer(() => {
 	const orderbook = useMemo(() => new ObservableOrderbook(), []);
+	const buySideVisualizer = useMemo(() => new ObservableOrderbookSideVisualizer(orderbook.buySide), [orderbook.buySide]);
 
 	return (
 		<SafeAreaView>
 			<StatusBar />
 			<ScrollView contentInsetAdjustmentBehavior="automatic">
-				<OrderbookSideView orderbookSide={orderbook.buySide} />
+				<Text>{"Grouping : " + buySideVisualizer.grouping}</Text>
+				<OrderbookSideView orderbookSide={buySideVisualizer} />
 				<OrderbookSideView orderbookSide={orderbook.sellSide} />
 			</ScrollView>
 		</SafeAreaView>

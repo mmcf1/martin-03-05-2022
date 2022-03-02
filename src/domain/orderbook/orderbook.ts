@@ -19,12 +19,12 @@ export class ObservableOrderbook {
 	}
 
 	@computed
-	get buySide(): OrderbookSide {
+	get buySide() {
 		return this.observableBuySide;
 	}
 
 	@computed
-	get sellSide(): OrderbookSide {
+	get sellSide() {
 		return this.observableSellSide;
 	}
 }
