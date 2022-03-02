@@ -8,18 +8,29 @@ import { ObservableOrderbookSideVisualizer } from "../domain/orderbook/orderbook
 export const HomeScreen = observer(() => {
 	const orderbook = useMemo(() => new ObservableOrderbook(), []);
 	const buySideVisualizer = useMemo(() => new ObservableOrderbookSideVisualizer(orderbook.buySide), [orderbook.buySide]);
+	const sellSideVisualizer = useMemo(() => new ObservableOrderbookSideVisualizer(orderbook.sellSide), [orderbook.sellSide]);
 
 	return (
 		<SafeAreaView>
 			<StatusBar />
 			<ScrollView contentInsetAdjustmentBehavior="automatic">
 				<Text>{"Grouping : " + buySideVisualizer.grouping}</Text>
-				<OrderbookSideView orderbookSide={buySideVisualizer} />
-				<OrderbookSideView orderbookSide={orderbook.sellSide} />
+				<View style={{ flexDirection: "row" }}>
+					<OrderbookSideView orderbookSide={buySideVisualizer} />
+					<Spacer />
+					<OrderbookSideView orderbookSide={orderbook.buySide} />
+				</View>
+				<View style={{ flexDirection: "row" }}>
+					<OrderbookSideView orderbookSide={sellSideVisualizer} />
+					<Spacer />
+					<OrderbookSideView orderbookSide={orderbook.sellSide} />
+				</View>
 			</ScrollView>
 		</SafeAreaView>
 	);
 });
+
+const Spacer = () => <View style={{ flexGrow: 1 }} />;
 
 const OrderbookSideView = observer((props: { orderbookSide: OrderbookSide }) => {
 	return (

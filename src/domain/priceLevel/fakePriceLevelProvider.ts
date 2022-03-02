@@ -8,7 +8,7 @@ export class FakePriceLevelProvider implements PriceLevelProvider {
 
 	constructor() {
 		setTimeout(() => this.onSnapshot.dispatch(initialData), 300);
-		setInterval(() => this.onDelta.dispatch(getRandomPriceLevels(getRandomInt(1, 3))), 200);
+		setInterval(() => this.onDelta.dispatch(getRandomPriceLevels(getRandomInt(1, 3))), 1000);
 	}
 }
 

@@ -7,7 +7,7 @@ export interface Orderbook {
 	sellSide: OrderbookSide;
 }
 
-export class ObservableOrderbook {
+export class ObservableOrderbook implements Orderbook {
 	private bidProvider = new FakePriceLevelProvider();
 	private askProvider = new FakePriceLevelProvider();
 
