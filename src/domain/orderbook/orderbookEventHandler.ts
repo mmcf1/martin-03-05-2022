@@ -9,10 +9,10 @@ export class OrderbookEventHandler {
 
 	onSnapshotReceived(priceLevels: PriceLevel[]) {
 		this.clearLevelsCallback();
-		priceLevels.forEach((l) => l.amount !== 0 && this.setLevelCallback(l));
+		priceLevels.forEach((l) => l.size !== 0 && this.setLevelCallback(l));
 	}
 
 	onDeltaReceived(priceLevels: PriceLevel[]) {
-		priceLevels.forEach((l) => (l.amount === 0 ? this.deleteLevelCallback(l) : this.setLevelCallback(l)));
+		priceLevels.forEach((l) => (l.size === 0 ? this.deleteLevelCallback(l) : this.setLevelCallback(l)));
 	}
 }

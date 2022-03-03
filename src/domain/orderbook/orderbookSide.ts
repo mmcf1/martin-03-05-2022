@@ -1,15 +1,15 @@
 import { computed, makeObservable, observable, ObservableMap, runInAction } from "mobx";
 import { Price, PriceLevel } from "../priceLevel/priceLevel";
 import { PriceLevelProvider } from "../priceLevel/priceLevelProvider";
+import { Side } from "../side/side";
 import { OrderbookEventHandler } from "./orderbookEventHandler";
-import { orderbookSort, priceLevelsTotalAmountReducer } from "./orderbookUtils";
-import { Side } from "./side";
+import { orderbookSort, priceLevelsTotalSizeReducer } from "./orderbookUtils";
 
 export interface OrderbookSide {
 	readonly side: Side;
 	readonly priceLevels: PriceLevel[];
-	readonly priceLevelsWithTotalAmount: PriceLevel[];
-	readonly totalAmount: number;
+	readonly priceLevelsWithTotalSize: PriceLevel[];
+	readonly bookSize: number;
 }
 
 export class ObservableOrderbookSide implements OrderbookSide {
@@ -28,13 +28,13 @@ export class ObservableOrderbookSide implements OrderbookSide {
 	}
 
 	@computed
-	get priceLevelsWithTotalAmount() {
-		return this.priceLevels.reduce(priceLevelsTotalAmountReducer, []);
+	get priceLevelsWithTotalSize() {
+		return this.priceLevels.reduce(priceLevelsTotalSizeReducer, []);
 	}
 
 	@computed
-	get totalAmount() {
-		return this.priceLevels.map((v) => v.amount).reduce((prev, curr) => prev + curr, 0);
+	get bookSize() {
+		return this.priceLevels.map((v) => v.size).reduce((prev, curr) => prev + curr, 0);
 	}
 
 	@computed

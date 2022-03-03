@@ -15,7 +15,7 @@ export class FakePriceLevelProvider implements PriceLevelProvider {
 }
 
 function getRandomPriceLevels(count: number): PriceLevel[] {
-	return Array.from({ length: count }, () => ({ price: getRandomInt(998, 1003), amount: getRandomInt(0, 10) }));
+	return Array.from({ length: count }, () => ({ price: getRandomInt(998, 1003), size: getRandomInt(0, 10) }));
 }
 
 function getRandomInt(min: number, max: number) {
@@ -25,10 +25,10 @@ function getRandomInt(min: number, max: number) {
 }
 
 const initialData: PriceLevel[] = [
-	{ price: 999.5, amount: 10 },
-	{ price: 1000.5, amount: 5 },
-	{ price: 1000, amount: 8 },
-	{ price: 1002.5, amount: 30 },
-	{ price: 1003, amount: 40 },
-	{ price: 999, amount: 50 },
+	{ price: 999.5, size: 10 },
+	{ price: 1000.5, size: 5 },
+	{ price: 1000, size: 8 },
+	{ price: 1002.5, size: 30 },
+	{ price: 1003, size: 40 },
+	{ price: 999, size: 50 },
 ];

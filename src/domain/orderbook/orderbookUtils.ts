@@ -1,12 +1,12 @@
 import { PriceLevel } from "../priceLevel/priceLevel";
-import { Side } from "./side";
+import { Side } from "../side/side";
 
 export const orderbookSort: { [Key in Side]: (a: PriceLevel, b: PriceLevel) => number } = {
 	buy: (a: PriceLevel, b: PriceLevel) => b.price - a.price,
-	sell: (a: PriceLevel, b: PriceLevel) => a.price - b.price,
+	sell: (a: PriceLevel, b: PriceLevel) => b.price - a.price,
 };
 
-export const priceLevelsTotalAmountReducer = (prev: PriceLevel[], curr: PriceLevel, index: number) => {
-	const prevAmount = prev.length > 0 ? prev[index - 1].amount : 0;
-	return [...prev, { price: curr.price, amount: prevAmount + curr.amount }];
+export const priceLevelsTotalSizeReducer = (prev: PriceLevel[], curr: PriceLevel, index: number) => {
+	const prevSize = prev.length > 0 ? prev[index - 1].size : 0;
+	return [...prev, { price: curr.price, size: prevSize + curr.size }];
 };

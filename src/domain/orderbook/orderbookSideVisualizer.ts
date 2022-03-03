@@ -2,7 +2,7 @@ import { computed, IMapDidChange, makeObservable, observable, ObservableMap, obs
 import { Price, PriceLevel } from "../priceLevel/priceLevel";
 import { OrderbookEventHandler } from "./orderbookEventHandler";
 import { ObservableOrderbookSide, OrderbookSide } from "./orderbookSide";
-import { orderbookSort, priceLevelsTotalAmountReducer } from "./orderbookUtils";
+import { orderbookSort, priceLevelsTotalSizeReducer } from "./orderbookUtils";
 
 export interface OrderbookSideVisualizer extends OrderbookSide {
 	readonly grouping: number;
@@ -33,13 +33,13 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 	}
 
 	@computed
-	get priceLevelsWithTotalAmount() {
-		return this.priceLevels.reduce(priceLevelsTotalAmountReducer, []);
+	get priceLevelsWithTotalSize() {
+		return this.priceLevels.reduce(priceLevelsTotalSizeReducer, []);
 	}
 
 	@computed
-	get totalAmount() {
-		return this.priceLevels.map((v) => v.amount).reduce((prev, curr) => prev + curr, 0);
+	get bookSize() {
+		return this.priceLevels.map((v) => v.size).reduce((prev, curr) => prev + curr, 0);
 	}
 
 	updateGrouping(value: number) {
@@ -53,10 +53,10 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 		const groupedPriceLevels = observable.map();
 		this.source.rawPriceLevels.forEach((priceLevel) => {
 			const price = this.getGroupedPrice(priceLevel, grouping);
-			const amountDelta = priceLevel.amount;
-			const currentAmount = groupedPriceLevels.get(price)?.amount ?? 0;
-			const amount = currentAmount + amountDelta;
-			groupedPriceLevels.set(price, { price, amount });
+			const sizeDelta = priceLevel.size;
+			const currentsize = groupedPriceLevels.get(price)?.size ?? 0;
+			const size = currentsize + sizeDelta;
+			groupedPriceLevels.set(price, { price, size });
 		});
 		runInAction(() => this.observableGroupedPriceLevels.replace(groupedPriceLevels));
 	}
@@ -84,10 +84,10 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 			throw new Error("Invalid handler");
 		}
 		const price = this.getGroupedPrice(change.newValue, this.grouping);
-		const amountDelta = change.newValue.amount;
-		const currentAmount = this.observableGroupedPriceLevels.get(price)?.amount ?? 0;
-		const amount = currentAmount + amountDelta;
-		return { price, amount };
+		const sizeDelta = change.newValue.size;
+		const currentsize = this.observableGroupedPriceLevels.get(price)?.size ?? 0;
+		const size = currentsize + sizeDelta;
+		return { price, size };
 	}
 
 	private handleUpdateChange(change: IMapDidChange<Price, PriceLevel>): PriceLevel {
@@ -95,10 +95,10 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 			throw new Error("Invalid handler");
 		}
 		const price = this.getGroupedPrice(change.newValue, this.grouping);
-		const amountDelta = change.newValue.amount - change.oldValue.amount;
-		const currentAmount = this.observableGroupedPriceLevels.get(price)?.amount;
-		const amount = currentAmount ? currentAmount + amountDelta : amountDelta;
-		return { price, amount };
+		const sizeDelta = change.newValue.size - change.oldValue.size;
+		const currentsize = this.observableGroupedPriceLevels.get(price)?.size;
+		const size = currentsize ? currentsize + sizeDelta : sizeDelta;
+		return { price, size };
 	}
 
 	private handleDeleteChange(change: IMapDidChange<Price, PriceLevel>): PriceLevel {
@@ -106,10 +106,10 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 			throw new Error("Invalid handler");
 		}
 		const price = this.getGroupedPrice(change.oldValue, this.grouping);
-		const amountDelta = -change.oldValue.amount;
-		const currentAmount = this.observableGroupedPriceLevels.get(price)?.amount;
-		const amount = currentAmount ? currentAmount + amountDelta : 0;
-		return { price, amount };
+		const sizeDelta = -change.oldValue.size;
+		const currentsize = this.observableGroupedPriceLevels.get(price)?.size;
+		const size = currentsize ? currentsize + sizeDelta : 0;
+		return { price, size };
 	}
 
 	private setPriceLevel(priceLevel: PriceLevel) {
