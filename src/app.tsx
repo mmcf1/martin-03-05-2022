@@ -1,5 +1,5 @@
 import React from "react";
-import { HomeScreen } from "./screens/homeScreen";
+import { HomeScreen } from "./ui/screens/homeScreen";
 
 const App = () => {
 	return <HomeScreen />;

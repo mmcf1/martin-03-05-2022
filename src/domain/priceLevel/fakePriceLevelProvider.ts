@@ -2,13 +2,15 @@ import { Signal } from "micro-signals";
 import { PriceLevel } from "./priceLevel";
 import { PriceLevelProvider } from "./priceLevelProvider";
 
+const UPDATE_INTERVAL_MS = 500;
+
 export class FakePriceLevelProvider implements PriceLevelProvider {
 	readonly onSnapshot = new Signal<PriceLevel[]>();
 	readonly onDelta = new Signal<PriceLevel[]>();
 
 	constructor() {
 		setTimeout(() => this.onSnapshot.dispatch(initialData), 300);
-		setInterval(() => this.onDelta.dispatch(getRandomPriceLevels(getRandomInt(1, 3))), 1000);
+		setInterval(() => this.onDelta.dispatch(getRandomPriceLevels(getRandomInt(1, 3))), UPDATE_INTERVAL_MS);
 	}
 }
 

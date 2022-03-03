@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import React, { useMemo } from "react";
-import { SafeAreaView, ScrollView, StatusBar, Text, View } from "react-native";
+import { Button, SafeAreaView, ScrollView, StatusBar, Text, View } from "react-native";
 import { ObservableOrderbook } from "../domain/orderbook/orderbook";
 import { OrderbookSide } from "../domain/orderbook/orderbookSide";
 import { ObservableOrderbookSideVisualizer } from "../domain/orderbook/orderbookSideVisualizer";
@@ -20,6 +20,13 @@ export const HomeScreen = observer(() => {
 					<Spacer />
 					<OrderbookSideView orderbookSide={orderbook.buySide} />
 				</View>
+				<Button
+					title={"+"}
+					onPress={() => {
+						buySideVisualizer.updateGrouping(buySideVisualizer.grouping * 2);
+						sellSideVisualizer.updateGrouping(sellSideVisualizer.grouping * 2);
+					}}
+				/>
 				<View style={{ flexDirection: "row" }}>
 					<OrderbookSideView orderbookSide={sellSideVisualizer} />
 					<Spacer />
@@ -35,8 +42,9 @@ const Spacer = () => <View style={{ flexGrow: 1 }} />;
 const OrderbookSideView = observer((props: { orderbookSide: OrderbookSide }) => {
 	return (
 		<View style={{ marginTop: 150 }}>
-			{props.orderbookSide.priceLevels.map((level) => (
-				<Text key={level.price}>{level.price + " --- " + level.amount}</Text>
+			<Text>{"Total : " + props.orderbookSide.totalAmount}</Text>
+			{props.orderbookSide.priceLevels.map((level, index) => (
+				<Text key={level.price}>{level.price + " --- " + level.amount + " : " + props.orderbookSide.priceLevelsWithTotalAmount[index].amount}</Text>
 			))}
 		</View>
 	);

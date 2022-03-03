@@ -2,17 +2,15 @@ import { computed, makeObservable, observable, ObservableMap, runInAction } from
 import { Price, PriceLevel } from "../priceLevel/priceLevel";
 import { PriceLevelProvider } from "../priceLevel/priceLevelProvider";
 import { OrderbookEventHandler } from "./orderbookEventHandler";
+import { orderbookSort, priceLevelsTotalAmountReducer } from "./orderbookUtils";
 import { Side } from "./side";
 
 export interface OrderbookSide {
 	readonly side: Side;
 	readonly priceLevels: PriceLevel[];
+	readonly priceLevelsWithTotalAmount: PriceLevel[];
+	readonly totalAmount: number;
 }
-
-export const orderbookSort: { [Key in Side]: (a: PriceLevel, b: PriceLevel) => number } = {
-	buy: (a: PriceLevel, b: PriceLevel) => b.price - a.price,
-	sell: (a: PriceLevel, b: PriceLevel) => a.price - b.price,
-};
 
 export class ObservableOrderbookSide implements OrderbookSide {
 	private readonly eventHandler = new OrderbookEventHandler(this.setPriceLevel.bind(this), this.deletePriceLevel.bind(this), this.clearLevels.bind(this));
@@ -27,6 +25,16 @@ export class ObservableOrderbookSide implements OrderbookSide {
 	@computed
 	get priceLevels() {
 		return Array.from(this.observablePriceLevels.values()).sort(orderbookSort[this.side]);
+	}
+
+	@computed
+	get priceLevelsWithTotalAmount() {
+		return this.priceLevels.reduce(priceLevelsTotalAmountReducer, []);
+	}
+
+	@computed
+	get totalAmount() {
+		return this.priceLevels.map((v) => v.amount).reduce((prev, curr) => prev + curr, 0);
 	}
 
 	@computed
