@@ -1,5 +1,6 @@
 import { Signal } from "micro-signals";
 import { action } from "mobx";
+import { Product } from "../../../domain/product/product";
 import { Config } from "../../config/config";
 import { AppStateObserver } from "../../lifecycle/appStateObserver";
 import { ReconnectingWebSocket } from "../../websocket/reconnectingWebsocket";
@@ -7,17 +8,19 @@ import { isOrderbookDeltaMessage } from "./messages/orderbookDeltaMessage";
 import { isOrderbookMessage } from "./messages/orderbookMessage";
 import { isOrderbookSnapshotMessage } from "./messages/orderbookSnapshotMessage";
 import { isOrderbookSubscriptionSucceedMessage } from "./messages/orderbookSuscriptionSucceedMessage";
+import { isOrderbookUnsubscriptionSucceedMessage } from "./messages/orderbookUnscriptionSucceedMessage";
 import { Delta, OrderbookWebsocketMessageSerializer, Snapshot } from "./orderbookWebsocketMessageSerializer";
 
 export class OrderbookWebsocketService {
 	private readonly messageSerializer = new OrderbookWebsocketMessageSerializer();
 
-	private readonly name = "CompozWifiWebSocket";
-	private readonly ackTimeout = 3000;
 	private appStateObserver = new AppStateObserver();
-
 	private webSocket: WebSocket | undefined | null;
-	private ackReceived = false;
+
+	readonly onSocketOpened = new Signal();
+
+	readonly onSubscribed = new Signal<{ productId: string }>();
+	readonly onUnsubscribed = new Signal<{ productId: string }>();
 
 	readonly onSnapshotReceived = new Signal<Snapshot>();
 	readonly onDeltaReceived = new Signal<Delta>();
@@ -28,10 +31,19 @@ export class OrderbookWebsocketService {
 		this.appStateObserver.onBecameInactive(this.handleAppInactive.bind(this));
 	}
 
+	subscribe(product: Product) {
+		console.log("Sending subscribe message");
+		this.webSocket?.send(this.messageSerializer.serializeSubscribeMessage(product.id));
+	}
+
+	unsubscribe(product: Product) {
+		console.log("Sending unsubscribe message");
+		this.webSocket?.send(this.messageSerializer.serializeUnsubscribeMessage(product.id));
+	}
+
 	private open() {
 		if (this.webSocket === undefined) {
 			console.info("Opening new socket");
-			this.ackReceived = false;
 			this.webSocket = new ReconnectingWebSocket(Config.WEB_SOCKET_URL);
 			this.addListeners(this.webSocket);
 		} else {
@@ -53,15 +65,7 @@ export class OrderbookWebsocketService {
 
 	private async onOpened() {
 		console.info("Socket opened");
-		console.info("Sending subscription message");
-		this.webSocket?.send(this.messageSerializer.serializeSubscriptionMessage("PI_XBTUSD"));
-		const ws = this.webSocket;
-		setTimeout(() => {
-			if (!this.ackReceived) {
-				console.info("Register ack not received closing socket");
-				ws?.close();
-			}
-		}, this.ackTimeout);
+		this.onSocketOpened.dispatch(null);
 	}
 
 	private onClosed(event: WebSocketCloseEvent) {
@@ -81,9 +85,12 @@ export class OrderbookWebsocketService {
 				if (isOrderbookMessage(message)) {
 					if (isOrderbookSubscriptionSucceedMessage(message)) {
 						console.log("Message received : ", data);
-						this.ackReceived = true;
+						this.onSubscribed.dispatch({ productId: message.product_ids[0] });
+					} else if (isOrderbookUnsubscriptionSucceedMessage(message)) {
+						console.log("Message received : ", data);
+						this.onUnsubscribed.dispatch({ productId: message.product_ids[0] });
 					} else if (isOrderbookSnapshotMessage(message)) {
-						console.log("Snapshot received", data);
+						console.log("Snapshot received");
 						const snapshot = this.messageSerializer.fromSnapshotMessage(message);
 						this.onSnapshotReceived.dispatch(snapshot);
 					} else if (isOrderbookDeltaMessage(message)) {

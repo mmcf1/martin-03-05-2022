@@ -3,6 +3,7 @@ import React, { useMemo } from "react";
 import styled from "styled-components/native";
 import { ObservableOrderbook } from "../../../domain/orderbook/orderbook";
 import { ObservableOrderbookSideVisualizer } from "../../../domain/orderbook/orderbookSideVisualizer";
+import { OrderbookBottomBar } from "./components/orderbookBottomBar";
 import { OrderbookHeader } from "./components/orderbookHeader";
 import { OrderbookSideView } from "./components/orderbookSideView";
 import { OrderbookSpreadView } from "./components/orderbookSpreadView";
@@ -22,6 +23,7 @@ export const OrderbookView = observer((props: OrderbookViewProps) => {
 				<OrderbookSideView orderbookSide={buySide} />
 				<OrderbookSpreadView orderbook={props.orderbook} />
 				<OrderbookSideView orderbookSide={sellSide} />
+				<OrderbookBottomBar toggleFeed={props.orderbook.toggleActiveProduct} killFeed={props.orderbook.killFeed} />
 			</SidesContainer>
 		</Container>
 	);

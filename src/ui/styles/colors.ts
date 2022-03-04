@@ -4,6 +4,8 @@ export interface Colors {
 	weakText: string;
 	buy: string;
 	sell: string;
+	cta: string;
+	stop: string;
 }
 
 export const colors: Colors = {
@@ -12,6 +14,8 @@ export const colors: Colors = {
 	weakText: "#3d3d3d",
 	buy: "#dd3c57",
 	sell: "#519c59",
+	cta: "#5442d1",
+	stop: "#aa2e27",
 };
 
 export function colorWithOpacity(color: string, opacity: number): string {
