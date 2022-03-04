@@ -1,6 +1,7 @@
 import { computed, makeObservable } from "mobx";
-import { FakePriceLevelProvider } from "../priceLevel/fakePriceLevelProvider";
+import { OrderbookWebsocketService } from "../../core/api/orderbook/orderbookWebsocketService";
 import { Price } from "../priceLevel/priceLevel";
+import { RemotePriceLevelProvider } from "../priceLevel/remotePriceLevelProvider";
 import { ObservableOrderbookSide, OrderbookSide } from "./orderbookSide";
 
 export interface Orderbook {
@@ -12,8 +13,9 @@ export interface Orderbook {
 }
 
 export class ObservableOrderbook implements Orderbook {
-	private bidProvider = new FakePriceLevelProvider("buy");
-	private askProvider = new FakePriceLevelProvider("sell");
+	private websocketService = new OrderbookWebsocketService();
+	private bidProvider = new RemotePriceLevelProvider(this.websocketService, "buy");
+	private askProvider = new RemotePriceLevelProvider(this.websocketService, "sell");
 
 	private observableBuySide = new ObservableOrderbookSide("buy", this.bidProvider);
 	private observableSellSide = new ObservableOrderbookSide("sell", this.askProvider);

@@ -20,7 +20,7 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 	}
 
 	@observable
-	grouping = 2.5;
+	grouping = 50;
 
 	@computed
 	get side() {
@@ -34,12 +34,12 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 
 	@computed
 	get priceLevels() {
-		return Array.from(this.observableGroupedPriceLevels.values()).sort(orderbookSort[this.side]);
+		return Array.from(this.observableGroupedPriceLevels.values()).sort(orderbookSort[this.side]).slice(0, 11);
 	}
 
 	@computed
 	get priceLevelsWithTotalSize() {
-		return priceLevelsTotalSizeReducer(this.priceLevels);
+		return priceLevelsTotalSizeReducer(this.priceLevels).slice(0, 11);
 	}
 
 	@computed
