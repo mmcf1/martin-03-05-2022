@@ -28,18 +28,23 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 	}
 
 	@computed
+	get topPrice(): Price | undefined {
+		return this.source.topPrice;
+	}
+
+	@computed
 	get priceLevels() {
 		return Array.from(this.observableGroupedPriceLevels.values()).sort(orderbookSort[this.side]);
 	}
 
 	@computed
 	get priceLevelsWithTotalSize() {
-		return this.priceLevels.reduce(priceLevelsTotalSizeReducer, []);
+		return priceLevelsTotalSizeReducer(this.priceLevels);
 	}
 
 	@computed
-	get bookSize() {
-		return this.priceLevels.map((v) => v.size).reduce((prev, curr) => prev + curr, 0);
+	get size() {
+		return this.source.size;
 	}
 
 	updateGrouping(value: number) {

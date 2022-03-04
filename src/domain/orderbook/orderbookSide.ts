@@ -3,15 +3,15 @@ import { Price, PriceLevel } from "../priceLevel/priceLevel";
 import { PriceLevelProvider } from "../priceLevel/priceLevelProvider";
 import { Side } from "../side/side";
 import { OrderbookEventHandler } from "./orderbookEventHandler";
-import { orderbookSort, priceLevelsTotalSizeReducer } from "./orderbookUtils";
+import { orderbookSizeReducer, orderbookSort, priceLevelsTotalSizeReducer } from "./orderbookUtils";
 
 export interface OrderbookSide {
 	readonly side: Side;
+	readonly topPrice: Price | undefined;
 	readonly priceLevels: PriceLevel[];
 	readonly priceLevelsWithTotalSize: PriceLevel[];
-	readonly bookSize: number;
+	readonly size: number;
 }
-
 export class ObservableOrderbookSide implements OrderbookSide {
 	private readonly eventHandler = new OrderbookEventHandler(this.setPriceLevel.bind(this), this.deletePriceLevel.bind(this), this.clearLevels.bind(this));
 	private readonly observablePriceLevels: ObservableMap<Price, PriceLevel> = observable.map();
@@ -23,18 +23,23 @@ export class ObservableOrderbookSide implements OrderbookSide {
 	}
 
 	@computed
+	get topPrice(): Price | undefined {
+		return this.priceLevels?.[0]?.price;
+	}
+
+	@computed
 	get priceLevels() {
 		return Array.from(this.observablePriceLevels.values()).sort(orderbookSort[this.side]);
 	}
 
 	@computed
 	get priceLevelsWithTotalSize() {
-		return this.priceLevels.reduce(priceLevelsTotalSizeReducer, []);
+		return priceLevelsTotalSizeReducer(this.priceLevels);
 	}
 
 	@computed
-	get bookSize() {
-		return this.priceLevels.map((v) => v.size).reduce((prev, curr) => prev + curr, 0);
+	get size() {
+		return orderbookSizeReducer(this.priceLevels);
 	}
 
 	@computed

@@ -1,8 +1,7 @@
 import { useTheme } from "styled-components";
-import { useSide } from "./useSide";
+import { Side } from "../../../../domain/side/side";
 
-export function useSideColor() {
-	const side = useSide();
+export function useSideColor(side: Side) {
 	const theme = useTheme();
 	return side === "buy" ? theme.colors.buy : theme.colors.sell;
 }

@@ -4,6 +4,7 @@ import styled from "styled-components/native";
 import { PriceLevel } from "../../../domain/priceLevel/priceLevel";
 import { colorWithOpacity } from "../../styles/colors";
 import { BoldText } from "../../styles/texts";
+import { useSide } from "../side/hooks/useSide";
 import { useSideColor } from "../side/hooks/useSideColor";
 import { Row } from "../utils/row";
 
@@ -14,7 +15,8 @@ type PriceLevelViewProps = {
 };
 
 export const PriceLevelView = observer((props: PriceLevelViewProps) => {
-	const color = useSideColor();
+	const side = useSide();
+	const color = useSideColor(side);
 	const depthViewColor = useMemo(() => colorWithOpacity(color, 0.2), [color]);
 	return (
 		<Container>

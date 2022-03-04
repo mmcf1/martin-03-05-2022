@@ -2,9 +2,9 @@ import { observer } from "mobx-react-lite";
 import React from "react";
 import styled from "styled-components/native";
 import { Orderbook } from "../../../domain/orderbook/orderbook";
-import { Separator } from "../utils/separator";
 import { OrderbookHeader } from "./components/orderbookHeader";
 import { OrderbookSideView } from "./components/orderbookSideView";
+import { OrderbookSpreadView } from "./components/orderbookSpreadView";
 
 type OrderbookViewProps = {
 	orderbook: Orderbook;
@@ -16,7 +16,7 @@ export const OrderbookView = observer((props: OrderbookViewProps) => {
 			<OrderbookHeader />
 			<SidesContainer>
 				<OrderbookSideView orderbookSide={props.orderbook.buySide} />
-				<Separator />
+				<OrderbookSpreadView orderbook={props.orderbook} />
 				<OrderbookSideView orderbookSide={props.orderbook.sellSide} />
 			</SidesContainer>
 		</Container>
@@ -29,4 +29,5 @@ const Container = styled.View`
 
 const SidesContainer = styled.View`
 	flex-grow: 1;
+	flex-basis: 0;
 `;
