@@ -1,34 +1,42 @@
 import { observer } from "mobx-react";
 import React, { useMemo } from "react";
 import styled from "styled-components/native";
-import { PriceLevel } from "../../../domain/priceLevel/priceLevel";
+import { PriceLevel, Size } from "../../../domain/priceLevel/priceLevel";
 import { colorWithOpacity } from "../../styles/colors";
 import { BoldText } from "../../styles/texts";
 import { useSide } from "../side/hooks/useSide";
 import { useSideColor } from "../side/hooks/useSideColor";
 import { Row } from "../utils/row";
+import { useFormatPrice } from "./hooks/useFormatPrice";
+import { useFormatSize } from "./hooks/useFormatSize";
 
 type PriceLevelViewProps = {
 	priceLevel: PriceLevel;
-	priceLevelTotalSize: number;
-	bookSize: number;
+	priceLevelTotalSize: Size;
+	bookSize: Size;
 };
 
 export const PriceLevelView = observer((props: PriceLevelViewProps) => {
 	const side = useSide();
 	const color = useSideColor(side);
+
 	const depthViewColor = useMemo(() => colorWithOpacity(color, 0.2), [color]);
+
+	const price = useFormatPrice(props.priceLevel.price);
+	const size = useFormatSize(props.priceLevel.size);
+	const totalSize = useFormatSize(props.priceLevelTotalSize);
+
 	return (
 		<Container>
 			<DepthView color={depthViewColor} levelTotalSize={props.priceLevelTotalSize} bookSize={props.bookSize} />
 			<TextContainer>
-				<Price color={color}>{props.priceLevel.price}</Price>
+				<Price color={color}>{price}</Price>
 			</TextContainer>
 			<TextContainer>
-				<Size>{props.priceLevel.size}</Size>
+				<LevelSize>{size}</LevelSize>
 			</TextContainer>
 			<TextContainer>
-				<TotalSize>{props.priceLevelTotalSize}</TotalSize>
+				<TotalSize>{totalSize}</TotalSize>
 			</TextContainer>
 		</Container>
 	);
@@ -36,7 +44,7 @@ export const PriceLevelView = observer((props: PriceLevelViewProps) => {
 
 const Container = styled(Row)``;
 
-const DepthView = styled.View<{ color: string; levelTotalSize: number; bookSize: number }>`
+const DepthView = styled.View<{ color: string; levelTotalSize: Size; bookSize: Size }>`
 	position: absolute;
 	height: 100%;
 	width: ${(props) => (props.levelTotalSize / props.bookSize) * 100}%;
@@ -59,6 +67,6 @@ const Price = styled(Text)<{ color: string }>`
 	color: ${(props) => props.color};
 `;
 
-const Size = styled(Text)``;
+const LevelSize = styled(Text)``;
 
 const TotalSize = styled(Text)``;

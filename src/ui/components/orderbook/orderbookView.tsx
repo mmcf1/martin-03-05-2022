@@ -1,23 +1,27 @@
 import { observer } from "mobx-react-lite";
-import React from "react";
+import React, { useMemo } from "react";
 import styled from "styled-components/native";
-import { Orderbook } from "../../../domain/orderbook/orderbook";
+import { ObservableOrderbook } from "../../../domain/orderbook/orderbook";
+import { ObservableOrderbookSideVisualizer } from "../../../domain/orderbook/orderbookSideVisualizer";
 import { OrderbookHeader } from "./components/orderbookHeader";
 import { OrderbookSideView } from "./components/orderbookSideView";
 import { OrderbookSpreadView } from "./components/orderbookSpreadView";
 
 type OrderbookViewProps = {
-	orderbook: Orderbook;
+	orderbook: ObservableOrderbook;
 };
 
 export const OrderbookView = observer((props: OrderbookViewProps) => {
+	const buySide = useMemo(() => new ObservableOrderbookSideVisualizer(props.orderbook.buySide), [props.orderbook]);
+	const sellSide = useMemo(() => new ObservableOrderbookSideVisualizer(props.orderbook.sellSide), [props.orderbook]);
+
 	return (
 		<Container>
 			<OrderbookHeader />
 			<SidesContainer>
-				<OrderbookSideView orderbookSide={props.orderbook.buySide} />
+				<OrderbookSideView orderbookSide={buySide} />
 				<OrderbookSpreadView orderbook={props.orderbook} />
-				<OrderbookSideView orderbookSide={props.orderbook.sellSide} />
+				<OrderbookSideView orderbookSide={sellSide} />
 			</SidesContainer>
 		</Container>
 	);
