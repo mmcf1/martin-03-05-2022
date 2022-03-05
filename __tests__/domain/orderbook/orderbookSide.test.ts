@@ -66,6 +66,6 @@ describe("Orderbook should be consistent after snapshot and deltas", () => {
 	});
 });
 
-function toPriceLevel(price: number, size: number): PriceLevel {
+export function toPriceLevel(price: number, size: number): PriceLevel {
 	return { price, size };
 }

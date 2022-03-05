@@ -10,7 +10,7 @@ beforeEach(() => {
 	resetCalls(orderbookSideMock);
 });
 
-describe("OrderbookVisualizer", () => {
+describe("OrderbookVisualizer tests suite", () => {
 	test("Side, topPrice, size should be correctly delegated", () => {
 		// Given
 		when(orderbookSideMock.rawPriceLevels).thenReturn(observable.map());
