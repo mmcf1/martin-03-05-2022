@@ -34,7 +34,7 @@ export class ObservableOrderbook implements Orderbook {
 		makeObservable(this);
 		reaction(
 			() => this.feed.activeProduct,
-			(product) => (this.observableGrouping = product.groupings[0]),
+			() => this.resetGrouping(),
 		);
 	}
 
@@ -95,5 +95,13 @@ export class ObservableOrderbook implements Orderbook {
 	@action.bound
 	async killFeed() {
 		await this.feed.killFeed();
+	}
+
+	private resetGrouping() {
+		runInAction(() => {
+			this.observableGrouping = this.activeProduct.groupings[0];
+			this.buySideVisualizer.updateGrouping(this.observableGrouping);
+			this.sellSideVisualizer.updateGrouping(this.observableGrouping);
+		});
 	}
 }
