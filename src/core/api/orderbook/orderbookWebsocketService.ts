@@ -51,7 +51,7 @@ export class OrderbookWebsocketService {
 		}
 	}
 
-	private close() {
+	close() {
 		this.webSocket?.close(1001);
 		this.webSocket = undefined;
 	}

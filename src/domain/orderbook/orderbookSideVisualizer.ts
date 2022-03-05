@@ -10,17 +10,17 @@ export interface OrderbookSideVisualizer extends OrderbookSide {
 }
 
 export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualizer {
+	@observable
+	private observableGrouping: number;
 	private readonly eventHandler = new OrderbookEventHandler(this.setPriceLevel.bind(this), this.deletePriceLevel.bind(this), this.clearLevels.bind(this));
 	private observableGroupedPriceLevels: ObservableMap<Price, PriceLevel> = observable.map();
 
-	constructor(private readonly source: ObservableOrderbookSide) {
+	constructor(private readonly source: ObservableOrderbookSide, initialGrouping: number) {
 		makeObservable(this);
-		this.initializeGroupedPriceLevels(this.grouping);
+		this.observableGrouping = initialGrouping;
+		this.initializeGroupedPriceLevels(this.observableGrouping);
 		observe(this.source.rawPriceLevels, this.onPriceLevelChanged.bind(this));
 	}
-
-	@observable
-	grouping = 50;
 
 	@computed
 	get side() {
@@ -34,12 +34,12 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 
 	@computed
 	get priceLevels() {
-		return Array.from(this.observableGroupedPriceLevels.values()).sort(orderbookSort[this.side]).slice(0, 11);
+		return Array.from(this.observableGroupedPriceLevels.values()).sort(orderbookSort[this.side]).slice(0, 10);
 	}
 
 	@computed
 	get priceLevelsWithTotalSize() {
-		return priceLevelsTotalSizeReducer(this.priceLevels).slice(0, 11);
+		return priceLevelsTotalSizeReducer(this.priceLevels).slice(0, 10);
 	}
 
 	@computed
@@ -47,10 +47,15 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 		return this.source.size;
 	}
 
+	@computed
+	get grouping() {
+		return this.observableGrouping;
+	}
+
 	updateGrouping(value: number) {
 		runInAction(() => {
 			this.initializeGroupedPriceLevels(value);
-			this.grouping = value;
+			this.observableGrouping = value;
 		});
 	}
 
@@ -88,7 +93,7 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 		if (change.type !== "add") {
 			throw new Error("Invalid handler");
 		}
-		const price = this.getGroupedPrice(change.newValue, this.grouping);
+		const price = this.getGroupedPrice(change.newValue, this.observableGrouping);
 		const sizeDelta = change.newValue.size;
 		const currentsize = this.observableGroupedPriceLevels.get(price)?.size ?? 0;
 		const size = currentsize + sizeDelta;
@@ -99,7 +104,7 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 		if (change.type !== "update") {
 			throw new Error("Invalid handler");
 		}
-		const price = this.getGroupedPrice(change.newValue, this.grouping);
+		const price = this.getGroupedPrice(change.newValue, this.observableGrouping);
 		const sizeDelta = change.newValue.size - change.oldValue.size;
 		const currentsize = this.observableGroupedPriceLevels.get(price)?.size;
 		const size = currentsize ? currentsize + sizeDelta : sizeDelta;
@@ -110,7 +115,7 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 		if (change.type !== "delete") {
 			throw new Error("Invalid handler");
 		}
-		const price = this.getGroupedPrice(change.oldValue, this.grouping);
+		const price = this.getGroupedPrice(change.oldValue, this.observableGrouping);
 		const sizeDelta = -change.oldValue.size;
 		const currentsize = this.observableGroupedPriceLevels.get(price)?.size;
 		const size = currentsize ? currentsize + sizeDelta : 0;

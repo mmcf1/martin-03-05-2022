@@ -1,37 +1,61 @@
-import { action, computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, observable, reaction, runInAction } from "mobx";
 import { Price } from "../priceLevel/priceLevel";
 import { Product } from "../product/product";
-import { OrderbookFeed } from "./orderbookFeed";
+import { ObservableOrderbookFeed } from "./orderbookFeed";
 import { ObservableOrderbookSide, OrderbookSide } from "./orderbookSide";
+import { ObservableOrderbookSideVisualizer } from "./orderbookSideVisualizer";
 
 export interface Orderbook {
+	activeProduct: Product;
 	buySide: OrderbookSide;
 	sellSide: OrderbookSide;
+	grouping: number;
 	bid: Price | undefined;
 	ask: Price | undefined;
 	spread: number | undefined;
-	activeProduct: Product;
+	toggleGrouping(): void;
 	toggleActiveProduct(): Promise<void>;
 	killFeed(): Promise<void>;
 }
 
 export class ObservableOrderbook implements Orderbook {
-	private feed = new OrderbookFeed();
+	private feed = new ObservableOrderbookFeed();
+
 	private observableBuySide = new ObservableOrderbookSide("buy", this.feed.buySidePriceProvider);
 	private observableSellSide = new ObservableOrderbookSide("sell", this.feed.sellSidePriceProvider);
 
+	@observable
+	private observableGrouping = this.feed.activeProduct.groupings[0];
+
+	private buySideVisualizer = new ObservableOrderbookSideVisualizer(this.observableBuySide, this.grouping);
+	private sellSideVisualizer = new ObservableOrderbookSideVisualizer(this.observableSellSide, this.grouping);
+
 	constructor() {
 		makeObservable(this);
+		reaction(
+			() => this.feed.activeProduct,
+			(product) => (this.observableGrouping = product.groupings[0]),
+		);
+	}
+
+	@computed
+	get activeProduct() {
+		return this.feed.activeProduct;
 	}
 
 	@computed
 	get buySide() {
-		return this.observableBuySide;
+		return this.buySideVisualizer;
 	}
 
 	@computed
 	get sellSide() {
-		return this.observableSellSide;
+		return this.sellSideVisualizer;
+	}
+
+	@computed
+	get grouping() {
+		return this.observableGrouping;
 	}
 
 	@computed
@@ -51,9 +75,16 @@ export class ObservableOrderbook implements Orderbook {
 		}
 	}
 
-	@computed
-	get activeProduct() {
-		return this.feed.activeProduct;
+	@action.bound
+	toggleGrouping() {
+		runInAction(() => {
+			let index = 1 + this.activeProduct.groupings.findIndex((group) => group === this.observableGrouping);
+			index = index >= this.activeProduct.groupings.length ? 0 : index;
+			const grouping = this.activeProduct.groupings[index];
+			this.observableGrouping = grouping;
+			this.buySideVisualizer.updateGrouping(grouping);
+			this.sellSideVisualizer.updateGrouping(grouping);
+		});
 	}
 
 	@action.bound

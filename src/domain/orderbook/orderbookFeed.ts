@@ -1,12 +1,21 @@
 import { computed, makeObservable, observable, runInAction } from "mobx";
 import { OrderbookWebsocketService } from "../../core/api/orderbook/orderbookWebsocketService";
+import { PriceLevelProvider } from "../priceLevel/priceLevelProvider";
 import { RemotePriceLevelProvider } from "../priceLevel/remotePriceLevelProvider";
 import { Product } from "../product/product";
 
-export class OrderbookFeed {
+export interface OderbookFeed {
+	activeProduct: Product;
+	buySidePriceProvider: PriceLevelProvider;
+	sellSidePriceProvider: PriceLevelProvider;
+	toggleActiveProduct(): Promise<void>;
+	killFeed(): Promise<void>;
+}
+
+export class ObservableOrderbookFeed implements OderbookFeed {
 	private products: Product[] = [
-		{ id: "PI_XBTUSD", displayName: "XBTUSD" },
-		{ id: "PI_ETHUSD", displayName: "ETHUSD" },
+		{ id: "PI_XBTUSD", displayName: "XBTUSD", groupings: [0.5, 1, 2.5] },
+		{ id: "PI_ETHUSD", displayName: "ETHUSD", groupings: [0.05, 0.1, 0.25] },
 	];
 
 	@observable
@@ -21,16 +30,22 @@ export class OrderbookFeed {
 
 	constructor() {
 		makeObservable(this);
-		this.websocketService.onSocketOpened.add(() => this.websocketService.subscribe(this.activeProduct));
+		this.websocketService.onSocketOpened.add(() => this.subscribe().catch(() => this.websocketService.close()));
 		this.websocketService.onSubscribed.add(() => (this.subscribed = true));
 		this.websocketService.onUnsubscribed.add(() => (this.subscribed = false));
 	}
 
 	async toggleActiveProduct() {
-		const product = this.activeProduct.id === this.products[0].id ? this.products[1] : this.products[0];
-		await this.unsubscribe();
-		runInAction(() => (this.observableActiveProduct = product));
-		await this.subscribe();
+		try {
+			const product = this.activeProduct.id === this.products[0].id ? this.products[1] : this.products[0];
+			await this.unsubscribe();
+			runInAction(() => (this.observableActiveProduct = product));
+			await this.subscribe();
+		} catch (e) {
+			if (e instanceof AckNotReceivedError) {
+				this.websocketService.close();
+			}
+		}
 	}
 
 	async killFeed() {
@@ -42,7 +57,7 @@ export class OrderbookFeed {
 			return new Promise<void>((resolve, reject) => {
 				this.websocketService.onSubscribed.addOnce(() => resolve());
 				this.websocketService.subscribe(this.activeProduct);
-				setTimeout(() => !this.subscribed && reject(), 2000);
+				setTimeout(() => !this.subscribed && reject(new AckNotReceivedError()), 2000);
 			});
 		}
 	}
@@ -52,7 +67,7 @@ export class OrderbookFeed {
 			return new Promise<void>((resolve, reject) => {
 				this.websocketService.onUnsubscribed.addOnce(() => resolve());
 				this.websocketService.unsubscribe(this.activeProduct);
-				setTimeout(() => this.subscribed && reject(), 2000);
+				setTimeout(() => this.subscribed && reject(AckNotReceivedError), 2000);
 			});
 		}
 	}
@@ -71,4 +86,8 @@ export class OrderbookFeed {
 	get sellSidePriceProvider() {
 		return this.askProvider;
 	}
+}
+
+class AckNotReceivedError extends Error {
+	message: string = "AckNotReceived";
 }
