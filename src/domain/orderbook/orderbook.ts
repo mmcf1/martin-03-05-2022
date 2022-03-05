@@ -1,7 +1,7 @@
 import { action, computed, makeObservable, observable, reaction, runInAction } from "mobx";
 import { Price } from "../priceLevel/priceLevel";
 import { Product } from "../product/product";
-import { ObservableOrderbookFeed } from "./orderbookFeed";
+import { OrderbookFeed } from "./orderbookFeed";
 import { ObservableOrderbookSide, OrderbookSide } from "./orderbookSide";
 import { ObservableOrderbookSideVisualizer } from "./orderbookSideVisualizer";
 
@@ -19,19 +19,13 @@ export interface Orderbook {
 }
 
 export class ObservableOrderbook implements Orderbook {
-	private feed = new ObservableOrderbookFeed();
-
-	private observableBuySide = new ObservableOrderbookSide("buy", this.feed.buySidePriceProvider);
-	private observableSellSide = new ObservableOrderbookSide("sell", this.feed.sellSidePriceProvider);
-
-	@observable
-	private observableGrouping = this.feed.activeProduct.groupings[0];
-
-	private buySideVisualizer = new ObservableOrderbookSideVisualizer(this.observableBuySide, this.grouping);
-	private sellSideVisualizer = new ObservableOrderbookSideVisualizer(this.observableSellSide, this.grouping);
-
-	constructor() {
+	constructor(private readonly feed: OrderbookFeed) {
 		makeObservable(this);
+		this.observableGrouping = this.feed.activeProduct.groupings[0];
+		this.observableBuySide = new ObservableOrderbookSide("buy", this.feed.buySidePriceProvider);
+		this.observableSellSide = new ObservableOrderbookSide("sell", this.feed.sellSidePriceProvider);
+		this.buySideVisualizer = new ObservableOrderbookSideVisualizer(this.observableBuySide, this.grouping);
+		this.sellSideVisualizer = new ObservableOrderbookSideVisualizer(this.observableSellSide, this.grouping);
 		reaction(
 			() => this.feed.activeProduct,
 			() => this.resetGrouping(),
@@ -96,6 +90,15 @@ export class ObservableOrderbook implements Orderbook {
 	async killFeed() {
 		await this.feed.killFeed();
 	}
+
+	@observable
+	private observableGrouping: number;
+
+	private observableBuySide: ObservableOrderbookSide;
+	private observableSellSide: ObservableOrderbookSide;
+
+	private buySideVisualizer: ObservableOrderbookSideVisualizer;
+	private sellSideVisualizer: ObservableOrderbookSideVisualizer;
 
 	private resetGrouping() {
 		runInAction(() => {

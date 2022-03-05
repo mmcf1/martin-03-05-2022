@@ -18,6 +18,7 @@ export class OrderbookWebsocketService {
 	private webSocket: WebSocket | undefined | null;
 
 	readonly onSocketOpened = new Signal();
+	readonly onSockedClosed = new Signal();
 
 	readonly onSubscribed = new Signal<{ productId: string }>();
 	readonly onUnsubscribed = new Signal<{ productId: string }>();
@@ -70,6 +71,7 @@ export class OrderbookWebsocketService {
 
 	private onClosed(event: WebSocketCloseEvent) {
 		console.info("Socket closed with code : ", event.code);
+		this.onSockedClosed.dispatch(null);
 	}
 
 	private onError(event: WebSocketErrorEvent) {

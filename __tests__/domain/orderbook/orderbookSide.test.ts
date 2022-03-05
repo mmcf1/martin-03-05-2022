@@ -33,22 +33,7 @@ describe("Orderbook should be consistent after snapshot and deltas", () => {
 		expect(orderbookSide.size).toBe(10);
 	});
 
-	test("Orderbook levels sort should be corrects", () => {
-		// Given
-		const orderbookBuySide = new ObservableOrderbookSide("buy", priceLevelProviderInstance);
-		const orderbookSellSide = new ObservableOrderbookSide("sell", priceLevelProviderInstance);
-
-		// When
-		priceLevelProviderInstance.onSnapshot.dispatch([toPriceLevel(997, 10), toPriceLevel(998, 10)]);
-		priceLevelProviderInstance.onDelta.dispatch([toPriceLevel(1000, 10), toPriceLevel(1001, 10)]);
-		priceLevelProviderInstance.onDelta.dispatch([toPriceLevel(999, 15), toPriceLevel(1000, 5)]);
-
-		// Then
-		expect(orderbookBuySide.priceLevels).toEqual([toPriceLevel(997, 10), toPriceLevel(998, 10), toPriceLevel(999, 15), toPriceLevel(1000, 5), toPriceLevel(1001, 10)]);
-		expect(orderbookSellSide.priceLevels).toEqual([toPriceLevel(1001, 10), toPriceLevel(1000, 5), toPriceLevel(999, 15), toPriceLevel(998, 10), toPriceLevel(997, 10)]);
-	});
-
-	test("Orderbook levels with total size should be corrects", () => {
+	test("Orderbook levels sort and total size should be corrects", () => {
 		// Given
 		const orderbookBuySide = new ObservableOrderbookSide("buy", priceLevelProviderInstance);
 		const orderbookSellSide = new ObservableOrderbookSide("sell", priceLevelProviderInstance);
@@ -59,7 +44,10 @@ describe("Orderbook should be consistent after snapshot and deltas", () => {
 		priceLevelProviderInstance.onDelta.dispatch([toPriceLevel(999, 15), toPriceLevel(1000, 5), toPriceLevel(998, 0)]);
 
 		// Then
-		expect(orderbookBuySide.priceLevelsWithTotalSize).toEqual([toPriceLevel(997, 10), toPriceLevel(999, 25), toPriceLevel(1000, 40), toPriceLevel(1001, 50)]);
+		expect(orderbookBuySide.priceLevels).toEqual([toPriceLevel(997, 10), toPriceLevel(999, 15), toPriceLevel(1000, 5), toPriceLevel(1001, 10)]);
+		expect(orderbookSellSide.priceLevels).toEqual([toPriceLevel(1001, 10), toPriceLevel(1000, 5), toPriceLevel(999, 15), toPriceLevel(997, 10)]);
+
+		expect(orderbookBuySide.priceLevelsWithTotalSize).toEqual([toPriceLevel(997, 10), toPriceLevel(999, 25), toPriceLevel(1000, 30), toPriceLevel(1001, 40)]);
 		expect(orderbookSellSide.priceLevelsWithTotalSize).toEqual([toPriceLevel(1001, 10), toPriceLevel(1000, 15), toPriceLevel(999, 30), toPriceLevel(997, 40)]);
 	});
 

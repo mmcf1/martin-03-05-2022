@@ -4,7 +4,7 @@ import { PriceLevelProvider } from "../priceLevel/priceLevelProvider";
 import { RemotePriceLevelProvider } from "../priceLevel/remotePriceLevelProvider";
 import { Product } from "../product/product";
 
-export interface OderbookFeed {
+export interface OrderbookFeed {
 	activeProduct: Product;
 	buySidePriceProvider: PriceLevelProvider;
 	sellSidePriceProvider: PriceLevelProvider;
@@ -12,28 +12,28 @@ export interface OderbookFeed {
 	killFeed(): Promise<void>;
 }
 
-export class ObservableOrderbookFeed implements OderbookFeed {
-	private products: Product[] = [
-		{ id: "PI_XBTUSD", displayName: "XBTUSD", groupings: [0.5, 1, 2.5] },
-		{ id: "PI_ETHUSD", displayName: "ETHUSD", groupings: [0.05, 0.1, 0.25] },
-	];
+type ProductPair = readonly [Product, Product];
 
-	@observable
-	private observableActiveProduct = this.products[1];
-
-	@observable
-	private subscribed = false;
-
+export class ObservableOrderbookFeed implements OrderbookFeed {
 	private websocketService = new OrderbookWebsocketService();
 	private bidProvider = new RemotePriceLevelProvider(this.websocketService, "buy");
 	private askProvider = new RemotePriceLevelProvider(this.websocketService, "sell");
 
-	constructor() {
+	constructor(private products: ProductPair) {
 		makeObservable(this);
+		this.products = products;
+		this.observableActiveProduct = products[0];
 		this.websocketService.onSocketOpened.add(() => this.subscribe().catch(() => this.websocketService.close()));
+		this.websocketService.onSockedClosed.add(() => (this.subscribed = false));
 		this.websocketService.onSubscribed.add(() => (this.subscribed = true));
 		this.websocketService.onUnsubscribed.add(() => (this.subscribed = false));
 	}
+
+	@observable
+	private observableActiveProduct: Product;
+
+	@observable
+	private subscribed = false;
 
 	async toggleActiveProduct() {
 		try {
