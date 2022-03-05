@@ -49,7 +49,11 @@ export class ObservableOrderbookFeed implements OderbookFeed {
 	}
 
 	async killFeed() {
-		await this.unsubscribe();
+		if (this.subscribed) {
+			await this.unsubscribe();
+		} else {
+			await this.subscribe();
+		}
 	}
 
 	private async subscribe() {
