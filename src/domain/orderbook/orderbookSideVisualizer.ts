@@ -10,7 +10,7 @@ export interface OrderbookSideVisualizer extends OrderbookSide {
 
 // Schedule UI update every 50 ms :
 
-const scheduler = (run: () => void) => {
+const defaultScheduler = (run: () => void) => {
 	setTimeout(run, 50);
 };
 
@@ -27,10 +27,10 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 	@observable
 	private observableGroupedPriceLevels: PriceLevel[] = [];
 
-	constructor(private readonly source: ObservableOrderbookSide, initialGrouping: number) {
+	constructor(private readonly source: ObservableOrderbookSide, initialGrouping: number, scheduler?: (run: () => void) => void) {
 		makeObservable(this);
 		this.observableGrouping = initialGrouping;
-		autorun(() => this.refresh(), { scheduler });
+		autorun(() => this.refresh(), { scheduler: scheduler ?? defaultScheduler });
 	}
 
 	@computed

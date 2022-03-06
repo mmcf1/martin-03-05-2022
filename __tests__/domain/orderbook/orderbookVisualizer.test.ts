@@ -5,6 +5,9 @@ import { ObservableOrderbookSideVisualizer } from "../../../src/domain/orderbook
 import { Price, PriceLevel } from "../../../src/domain/priceLevel/priceLevel";
 
 const orderbookSideMock = mock<ObservableOrderbookSide>();
+const noDelayScheduler = (run: () => void) => {
+	run();
+};
 
 beforeEach(() => {
 	resetCalls(orderbookSideMock);
@@ -19,7 +22,7 @@ describe("OrderbookVisualizer tests suite", () => {
 		when(orderbookSideMock.size).thenReturn(1000);
 
 		const orderbookSideInstance = instance(orderbookSideMock);
-		const visualizer = new ObservableOrderbookSideVisualizer(orderbookSideInstance, 10);
+		const visualizer = new ObservableOrderbookSideVisualizer(orderbookSideInstance, 10, noDelayScheduler);
 
 		// Then
 		expect(visualizer.side).toBe("buy");
@@ -40,7 +43,7 @@ describe("OrderbookVisualizer tests suite", () => {
 		when(orderbookSideMock.rawPriceLevels).thenReturn();
 
 		const orderbookSideInstance = instance(orderbookSideMock);
-		const visualizer = new ObservableOrderbookSideVisualizer(orderbookSideInstance, 2.5);
+		const visualizer = new ObservableOrderbookSideVisualizer(orderbookSideInstance, 2.5, noDelayScheduler);
 
 		// Then
 		const expectedGroupedLevels_2_5 = [
