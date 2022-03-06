@@ -13,7 +13,7 @@ import { useFormatSize } from "./hooks/useFormatSize";
 type PriceLevelViewProps = {
 	priceLevel: PriceLevel;
 	priceLevelTotalSize: Size;
-	bookSize: Size;
+	orderbookSideSize: Size;
 };
 
 export const PriceLevelView = observer((props: PriceLevelViewProps) => {
@@ -28,7 +28,7 @@ export const PriceLevelView = observer((props: PriceLevelViewProps) => {
 
 	return (
 		<Container>
-			<DepthView color={depthViewColor} levelTotalSize={props.priceLevelTotalSize} bookSize={props.bookSize} />
+			<DepthView color={depthViewColor} levelTotalSize={props.priceLevelTotalSize} bookSize={props.orderbookSideSize} />
 			<TextContainer>
 				<Price color={color}>{price}</Price>
 			</TextContainer>

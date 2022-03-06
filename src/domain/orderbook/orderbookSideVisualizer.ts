@@ -1,6 +1,5 @@
-import { computed, IMapDidChange, makeObservable, observable, ObservableMap, observe, runInAction } from "mobx";
+import { autorun, computed, makeObservable, observable, runInAction } from "mobx";
 import { Price, PriceLevel } from "../priceLevel/priceLevel";
-import { OrderbookEventHandler } from "./orderbookEventHandler";
 import { ObservableOrderbookSide, OrderbookSide } from "./orderbookSide";
 import { orderbookSort, priceLevelsTotalSizeReducer } from "./orderbookUtils";
 
@@ -9,17 +8,29 @@ export interface OrderbookSideVisualizer extends OrderbookSide {
 	updateGrouping(value: number): void;
 }
 
+// Schedule UI update every 50 ms :
+
+const scheduler = (run: () => void) => {
+	setTimeout(run, 50);
+};
+
 export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualizer {
 	@observable
 	private observableGrouping: number;
-	private readonly eventHandler = new OrderbookEventHandler(this.setPriceLevel.bind(this), this.deletePriceLevel.bind(this), this.clearLevels.bind(this));
-	private observableGroupedPriceLevels: ObservableMap<Price, PriceLevel> = observable.map();
+
+	@observable
+	private observableTopPrice: Price | undefined = undefined;
+
+	@observable
+	private observableSize: number = 0;
+
+	@observable
+	private observableGroupedPriceLevels: PriceLevel[] = [];
 
 	constructor(private readonly source: ObservableOrderbookSide, initialGrouping: number) {
 		makeObservable(this);
 		this.observableGrouping = initialGrouping;
-		this.initializeGroupedPriceLevels(this.observableGrouping);
-		observe(this.source.rawPriceLevels, this.onPriceLevelChanged.bind(this));
+		autorun(() => this.refresh(), { scheduler });
 	}
 
 	@computed
@@ -29,22 +40,22 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 
 	@computed
 	get topPrice(): Price | undefined {
-		return this.source.topPrice;
+		return this.observableTopPrice;
 	}
 
 	@computed
 	get priceLevels() {
-		return Array.from(this.observableGroupedPriceLevels.values()).sort(orderbookSort[this.side]).slice(0, 10);
+		return this.observableGroupedPriceLevels;
 	}
 
 	@computed
 	get priceLevelsWithTotalSize() {
-		return priceLevelsTotalSizeReducer(this.priceLevels).slice(0, 10);
+		return priceLevelsTotalSizeReducer(this.priceLevels);
 	}
 
 	@computed
 	get size() {
-		return this.source.size;
+		return this.observableSize;
 	}
 
 	@computed
@@ -54,84 +65,32 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 
 	updateGrouping(value: number) {
 		runInAction(() => {
-			this.initializeGroupedPriceLevels(value);
 			this.observableGrouping = value;
+			this.refresh();
 		});
 	}
 
-	private initializeGroupedPriceLevels(grouping: number) {
-		const groupedPriceLevels = observable.map();
-		this.source.rawPriceLevels.forEach((priceLevel) => {
+	private refresh() {
+		const size = this.source.size;
+		const topPrice = this.source.topPrice;
+		const groupedPriceLevels = this.getGroupedPriceLevels(this.source.rawPriceLevels, this.grouping);
+		runInAction(() => {
+			this.observableSize = size;
+			this.observableTopPrice = topPrice;
+			this.observableGroupedPriceLevels = groupedPriceLevels;
+		});
+	}
+
+	private getGroupedPriceLevels(source: Map<number, PriceLevel>, grouping: number) {
+		const priceLevelsMap = new Map();
+		source.forEach((priceLevel) => {
 			const price = this.getGroupedPrice(priceLevel, grouping);
 			const sizeDelta = priceLevel.size;
-			const currentsize = groupedPriceLevels.get(price)?.size ?? 0;
+			const currentsize = priceLevelsMap.get(price)?.size ?? 0;
 			const size = currentsize + sizeDelta;
-			groupedPriceLevels.set(price, { price, size });
+			priceLevelsMap.set(price, { price, size });
 		});
-		runInAction(() => this.observableGroupedPriceLevels.replace(groupedPriceLevels));
-	}
-
-	private onPriceLevelChanged(change: IMapDidChange<Price, PriceLevel>) {
-		let groupedPriceLevel: PriceLevel;
-
-		switch (change.type) {
-			case "add":
-				groupedPriceLevel = this.handleAddChange(change);
-				break;
-			case "update":
-				groupedPriceLevel = this.handleUpdateChange(change);
-				break;
-			case "delete":
-				groupedPriceLevel = this.handleDeleteChange(change);
-				break;
-		}
-
-		this.eventHandler.onDeltaReceived([groupedPriceLevel]);
-	}
-
-	private handleAddChange(change: IMapDidChange<Price, PriceLevel>): PriceLevel {
-		if (change.type !== "add") {
-			throw new Error("Invalid handler");
-		}
-		const price = this.getGroupedPrice(change.newValue, this.observableGrouping);
-		const sizeDelta = change.newValue.size;
-		const currentsize = this.observableGroupedPriceLevels.get(price)?.size ?? 0;
-		const size = currentsize + sizeDelta;
-		return { price, size };
-	}
-
-	private handleUpdateChange(change: IMapDidChange<Price, PriceLevel>): PriceLevel {
-		if (change.type !== "update") {
-			throw new Error("Invalid handler");
-		}
-		const price = this.getGroupedPrice(change.newValue, this.observableGrouping);
-		const sizeDelta = change.newValue.size - change.oldValue.size;
-		const currentsize = this.observableGroupedPriceLevels.get(price)?.size;
-		const size = currentsize ? currentsize + sizeDelta : sizeDelta;
-		return { price, size };
-	}
-
-	private handleDeleteChange(change: IMapDidChange<Price, PriceLevel>): PriceLevel {
-		if (change.type !== "delete") {
-			throw new Error("Invalid handler");
-		}
-		const price = this.getGroupedPrice(change.oldValue, this.observableGrouping);
-		const sizeDelta = -change.oldValue.size;
-		const currentsize = this.observableGroupedPriceLevels.get(price)?.size;
-		const size = currentsize ? currentsize + sizeDelta : 0;
-		return { price, size };
-	}
-
-	private setPriceLevel(priceLevel: PriceLevel) {
-		runInAction(() => this.observableGroupedPriceLevels.set(priceLevel.price, priceLevel));
-	}
-
-	private deletePriceLevel(priceLevel: PriceLevel) {
-		runInAction(() => this.observableGroupedPriceLevels.delete(priceLevel.price));
-	}
-
-	private clearLevels() {
-		runInAction(() => this.observableGroupedPriceLevels.clear());
+		return Array.from(priceLevelsMap.values()).sort(orderbookSort[this.side]).slice(0, 10);
 	}
 
 	private getGroupedPrice(priceLevel: PriceLevel, grouping: number): Price {

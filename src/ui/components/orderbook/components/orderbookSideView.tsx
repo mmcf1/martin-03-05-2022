@@ -23,7 +23,7 @@ export const OrderbookSideView = observer((props: OrderbookSideViewProps) => {
 					{props.orderbookSide.priceLevels.map((_, i, levels) => {
 						const index = side === "sell" ? i : levels.length - 1 - i;
 						const priceLevelTotalSize = props.orderbookSide.priceLevelsWithTotalSize[index].size;
-						return <PriceLevelView key={levels[index].price} priceLevel={levels[index]} priceLevelTotalSize={priceLevelTotalSize} bookSize={props.orderbookSide.size} />;
+						return <PriceLevelView key={levels[index].price} priceLevel={levels[index]} priceLevelTotalSize={priceLevelTotalSize} orderbookSideSize={props.orderbookSide.size} />;
 					})}
 				</SideProvider>
 			</PriceLevelContainer>
