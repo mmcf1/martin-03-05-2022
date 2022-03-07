@@ -40,10 +40,8 @@ const Container = styled.View`
 `;
 
 const TitleRow = styled(Row)`
-	align-items: baseline;
-	margin-left: 8px;
-	margin-top: 12px;
-	margin-bottom: 12px;
+	align-items: center;
+	margin: 8px 12px;
 `;
 
 const Title = styled(BoldText)`

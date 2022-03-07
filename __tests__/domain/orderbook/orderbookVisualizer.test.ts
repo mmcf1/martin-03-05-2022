@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, runInAction } from "mobx";
 import { instance, mock, resetCalls, when } from "ts-mockito";
 import { ObservableOrderbookSide } from "../../../src/domain/orderbook/orderbookSide";
 import { ObservableOrderbookSideVisualizer } from "../../../src/domain/orderbook/orderbookSideVisualizer";
@@ -70,9 +70,11 @@ describe("OrderbookVisualizer tests suite", () => {
 		expect(visualizer.priceLevelsWithTotalSize).toEqual(expectedGroupedLevels_10);
 
 		// Levels update test:
-		levels.delete(998.5);
-		levels.set(1001, { price: 1001, size: 5 });
-		levels.set(1000, { price: 1000, size: 20 });
+		runInAction(() => {
+			levels.delete(998.5);
+			levels.set(1001, { price: 1001, size: 5 });
+			levels.set(1000, { price: 1000, size: 20 });
+		});
 		expect(visualizer.priceLevelsWithTotalSize).toEqual(expectedGroupedLevels_AfterUpdates);
 	});
 });

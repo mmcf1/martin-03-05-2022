@@ -95,6 +95,7 @@ export class ObservableOrderbookSideVisualizer implements OrderbookSideVisualize
 
 	private getGroupedPrice(priceLevel: PriceLevel, grouping: number): Price {
 		const price = priceLevel.price;
-		return price - (price % grouping);
+		// * 100 avoid floating point rounding errors
+		return price - ((price * 100) % (grouping * 100)) / 100;
 	}
 }
